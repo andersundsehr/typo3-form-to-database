@@ -60,9 +60,9 @@ class FormResultRepository extends Repository
      * @return QueryResultInterface
      * @throws InvalidQueryException
      */
-    public function findByFormPersistenceIdentifier(string $formPersistenceIdentifier): QueryResultInterface
+    public function findByFormPersistenceIdentifierAndStartAndDate(string $formPersistenceIdentifier, int $startDate, int $endDate): QueryResultInterface
     {
-        return $this->createQueryByFormPersistenceIdentifier($formPersistenceIdentifier)->execute();
+        return $this->createQueryByFormPersistenceIdentifierAndStartAndDate($formPersistenceIdentifier, $startDate, $endDate)->execute();
     }
 
     /**
@@ -84,11 +84,11 @@ class FormResultRepository extends Repository
      * @return QueryInterface
      * @throws InvalidQueryException
      */
-    protected function createQueryByFormPersistenceIdentifier(string $formPersistenceIdentifier): QueryInterface
+    private function createQueryByFormPersistenceIdentifierAndStartAndDate(string $formPersistenceIdentifier, int $startDate, int $endDate): QueryInterface
     {
         $query = $this->createQuery();
         $webMounts = $this->getWebMounts();
-        if (empty($webMounts) === false) {
+        if ($webMounts !== []) {
             $siteIdentifiers = $this->getSiteIdentifiersFromRootPids($webMounts);
             $pluginUids = $this->getPluginUids($webMounts);
             $orConditions = [];
@@ -219,5 +219,21 @@ class FormResultRepository extends Repository
         $query = $this->createQuery();
         $query->matching($query->lessThan('tstamp', $maxDate));
         return $query->execute();
+    }
+
+    public function getOldestDate($formPersistenceIdentifier)
+    {
+        $tablename = 'tx_formtodatabase_domain_model_formresult';
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($tablename);
+        return $queryBuilder
+            ->select('tstamp')
+            ->from($tablename)
+            ->where(
+                $queryBuilder->expr()->eq('form_persistence_identifier', $queryBuilder->createNamedParameter($formPersistenceIdentifier))
+            )
+            ->orderBy('tstamp', QueryInterface::ORDER_ASCENDING)
+            ->setMaxResults(1)
+            ->execute()
+            ->fetchOne();
     }
 }

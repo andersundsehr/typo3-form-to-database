@@ -238,7 +238,23 @@ class FormResultsController extends FormManagerController
             'ftd_deleteDescription' => $this->getLanguageService()->sL($languageFile . 'show.buttons.delete.description')
         ]);
 
-        $formResults = $this->formResultRepository->findByFormPersistenceIdentifier($formPersistenceIdentifier);
+        $filter = GeneralUtility::_GP('filter');
+        $startDate = 0;
+        $format = "H:i d-m-Y";
+        $endDate = strtotime(date($format));
+        if ($filter) {
+            if ($filter['start']) {
+                $startDate = strtotime(date_format(date_create($filter['start']), $format));
+            } else {
+                $startDate = $this->formResultRepository->getOldestDate($formPersistenceIdentifier);
+            }
+
+            $endDate =  strtotime(date_format(date_create($filter['end']), $format));
+            $this->view->assign('startDateSearched', date($format, $startDate));
+            $this->view->assign('endDateSearched', date($format, $endDate));
+        }
+
+        $formResults = $this->formResultRepository->findByFormPersistenceIdentifierAndStartAndDate($formPersistenceIdentifier, $startDate, $endDate);
         $formDefinition = $this->getFormDefinitionObject($formPersistenceIdentifier, true);
         $formRenderables = $this->getFormRenderables($formDefinition);
         $lastView = $this->getCurrentBEUserLastViewTime($formDefinition);
