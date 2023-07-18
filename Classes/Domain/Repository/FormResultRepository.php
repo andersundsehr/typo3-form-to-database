@@ -84,11 +84,11 @@ class FormResultRepository extends Repository
      * @return QueryInterface
      * @throws InvalidQueryException
      */
-    private function createQueryByFormPersistenceIdentifierAndStartAndDate(string $formPersistenceIdentifier, int $startDate, int $endDate): QueryInterface
+    protected function createQueryByFormPersistenceIdentifierAndStartAndDate(string $formPersistenceIdentifier, int $startDate, int $endDate): QueryInterface
     {
         $query = $this->createQuery();
         $webMounts = $this->getWebMounts();
-        if ($webMounts !== []) {
+        if (empty($webMounts) === false) {
             $siteIdentifiers = $this->getSiteIdentifiersFromRootPids($webMounts);
             $pluginUids = $this->getPluginUids($webMounts);
             $orConditions = [];
@@ -221,11 +221,11 @@ class FormResultRepository extends Repository
         return $query->execute();
     }
 
-    public function getOldestDate($formPersistenceIdentifier)
+    public function getOldestDate(string $formPersistenceIdentifier): int
     {
         $tablename = 'tx_formtodatabase_domain_model_formresult';
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($tablename);
-        return $queryBuilder
+        return (int)$queryBuilder
             ->select('tstamp')
             ->from($tablename)
             ->where(
