@@ -161,7 +161,11 @@ class FormResultsController extends FormManagerController
         $this->moduleTemplate = $this->moduleTemplateFactory->create($this->request);
 
         $this->registerDocheaderButtons();
-        $availableFormDefinitions = $this->getAvailableFormDefinitions();
+        $filter = GeneralUtility::_GP('filter');
+        $availableFormDefinitions = $this->getAvailableFormDefinitions($filter['search'] ?? '');
+        if ($filter['search']) {
+            $this->view->assign('nameSearched', $filter['search']);
+        }
         $this->enrichFormDefinitionsWithHighestCrDate($availableFormDefinitions);
         $this->view->assign('forms', $availableFormDefinitions);
         $this->view->assign('deletedForms', $this->getDeletedFormDefinitions($availableFormDefinitions));
@@ -415,7 +419,7 @@ class FormResultsController extends FormManagerController
      *
      * @return array
      */
-    protected function getAvailableFormDefinitions(): array
+    protected function getAvailableFormDefinitions(string $searchWord = ''): array
     {
         $formResults = $this->formResultDatabaseService->getAllFormResultsForPersistenceIdentifier();
         $availableFormDefinitions = [];
@@ -424,6 +428,11 @@ class FormResultsController extends FormManagerController
             if (!empty($form['finishers']) && in_array('FormToDatabase', array_column($form['finishers'], 'identifier'),
                     true)) {
                 $formDefinition['numberOfResults'] = $formResults[$formDefinition['persistenceIdentifier']] ?? 0;
+                if ($searchWord) {
+                    if (!str_contains(strtolower((string)$formDefinition['name']), strtolower($searchWord))) {
+                        continue;
+                    }
+                }
                 $availableFormDefinitions[] = $formDefinition;
             }
         }

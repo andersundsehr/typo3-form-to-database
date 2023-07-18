@@ -113,6 +113,8 @@ class FormResultRepository extends Repository
             $query->matching(
                 $query->logicalAnd([
                     $query->equals('formPersistenceIdentifier', $formPersistenceIdentifier),
+                    $query->lessThanOrEqual('tstamp', $endDate),
+                    $query->greaterThanOrEqual('tstamp', $startDate),
                     $query->logicalOr($orConditions)
                 ])
             );
