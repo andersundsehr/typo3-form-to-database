@@ -227,7 +227,7 @@ class FormResultsController extends FormManagerController
      * @noinspection PhpUndefinedMethodInspection
      * @noinspection PhpUnused
      */
-    public function showAction(string $formPersistenceIdentifier): ResponseInterface
+    public function showAction(string $formPersistenceIdentifier, ?string $startDateSearched = '', ?string $endDateSearched = ''): ResponseInterface
     {
         $fieldsWithData = [];
         $this->moduleTemplate = $this->moduleTemplateFactory->create($this->request);
@@ -242,21 +242,22 @@ class FormResultsController extends FormManagerController
             'ftd_deleteDescription' => $this->getLanguageService()->sL($languageFile . 'show.buttons.delete.description')
         ]);
 
-        $filter = GeneralUtility::_GP('filter');
         $startDate = 0;
         $format = "H:i d-m-Y";
-        $endDate = strtotime(date($format));
-        if ($filter) {
-            if ($filter['start']) {
-                $startDate = strtotime(date_format(date_create($filter['start']), $format));
-            } else {
-                $startDate = $this->formResultRepository->getOldestDate($formPersistenceIdentifier);
-            }
-
-            $endDate =  strtotime(date_format(date_create($filter['end']), $format));
-            $this->view->assign('startDateSearched', date($format, $startDate));
-            $this->view->assign('endDateSearched', date($format, $endDate));
+        if ($startDateSearched) {
+            $startDate = strtotime(date_format(date_create($startDateSearched), $format));;
         }
+        else {
+            $startDate = $this->formResultRepository->getOldestDate($formPersistenceIdentifier);
+        }
+
+        if ($endDateSearched) {
+            $endDate = strtotime(date_format(date_create($endDateSearched), $format));
+        } else {
+            $endDate = strtotime(date($format));
+        }
+        $this->view->assign('startDateSearched', date($format, $startDate));
+        $this->view->assign('endDateSearched', date($format, $endDate));
 
         $formResults = $this->formResultRepository->findByFormPersistenceIdentifierAndStartAndDate($formPersistenceIdentifier, $startDate, $endDate);
         $formDefinition = $this->getFormDefinitionObject($formPersistenceIdentifier, true);
