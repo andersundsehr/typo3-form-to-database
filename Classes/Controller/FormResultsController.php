@@ -245,7 +245,7 @@ class FormResultsController extends FormManagerController
         $startDate = 0;
         $format = "H:i d-m-Y";
         if ($startDateSearched) {
-            $startDate = strtotime(date_format(date_create($startDateSearched), $format));;
+            $startDate = strtotime(date_format(date_create($startDateSearched), $format));
         }
         else {
             $startDate = $this->formResultRepository->getOldestDate($formPersistenceIdentifier);
